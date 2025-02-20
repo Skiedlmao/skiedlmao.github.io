@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skied - Creative Developer</title>
+
+  <!-- Tailwind CSS -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Font Awesome -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Animate.css -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    rel="stylesheet"
+  />
+
+  <!-- Three.js & GSAP -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+    defer
+  ></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"
+    defer
+  ></script>
+
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --secondary: #7C3AED;
+      --accent: #06B6D4;
+    }
+
+    body {
+      margin: 0;
+      background: #0a0a0a;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      perspective: 1000px; /* For any 3D transforms in content */
+    }
+
+    /* Position the Three.js canvas behind everything */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    /* Custom Cursor & Glow */
+    #cursor {
+      width: 20px;
+      height: 20px;
+      background: rgba(6, 182, 212, 0.5);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: all 0.1s ease;
+    }
+    .cursor-glow {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: all 0.3s ease;
+    }
+
+    /* Glass Effect for Navigation & Cards */
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+    }
+
+    /* Floating Animation for “Skied” */
+    .floating-card {
+      transform-style: preserve-3d;
+      animation: float 6s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      25% { transform: translate3d(10px, -10px, 50px) rotate(5deg); }
+      50% { transform: translate3d(0, -20px, 100px) rotate(10deg); }
+      75% { transform: translate3d(-10px, -10px, 50px) rotate(5deg); }
+    }
+
+    /* Navigation Link Underline Animation */
+    .nav-link {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform 0.3s ease;
+    }
+    .nav-link:hover::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    /* Glow Text Effect */
+    .glow-text {
+      text-shadow:
+        0 0 10px var(--primary),
+        0 0 20px var(--secondary),
+        0 0 40px var(--accent);
+    }
+
+    /* Tech Card Hover Effects */
+    .tech-card {
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      position: relative;
+      overflow: hidden;
+    }
+    .tech-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: translateX(-100%);
+      transition: 0.6s;
+    }
+    .tech-card:hover::before {
+      transform: translateX(100%);
+    }
+    .tech-card:hover {
+      transform: translateY(-10px) rotateY(20deg) rotateX(10deg) scale(1.02);
+      box-shadow:
+        20px 20px 60px rgba(79,70,229,0.2),
+        -20px -20px 60px rgba(124,58,237,0.2),
+        0 0 20px rgba(6,182,212,0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- Custom Cursor Elements -->
+  <div id="cursor"></div>
+  <div class="cursor-glow"></div>
+
+  <!-- Three.js Canvas Container (Starfield) -->
+  <div id="canvas-container"></div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 w-full z-50 glass">
+    <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#hero" class="text-3xl font-bold glow-text floating-card">Skied</a>
+      <div class="hidden md:flex space-x-8">
+        <a href="#tech-stack" class="nav-link text-gray-300 hover:text-white">Tech Stack</a>
+        <a href="#projects" class="nav-link text-gray-300 hover:text-white">Projects</a>
+        <a href="#contact" class="nav-link text-gray-300 hover:text-white">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Social Links -->
+  <div class="fixed right-4 top-1/2 transform -translate-y-1/2 space-y-4 z-50">
+    <a
+      href="https://github.com/Skiedlmao"
+      target="_blank"
+      class="block w-12 h-12 glass rounded-full flex items-center justify-center hover:translate-x-[-10px] transition"
+    >
+      <i class="fab fa-github text-2xl"></i>
+    </a>
+    <a
+      href="https://namemc.com/profile/Skied"
+      target="_blank"
+      class="block w-12 h-12 glass rounded-full flex items-center justify-center hover:translate-x-[-10px] transition"
+    >
+      <img
+        src="https://namemc.com/favicon.ico"
+        alt="NameMC"
+        class="w-6 h-6"
+      />
+    </a>
+  </div>
+
+  <!-- Main Hero Section -->
+  <main class="container mx-auto px-6 pt-32" id="hero">
+    <section class="min-h-screen flex flex-col items-center justify-center text-center">
+      <div>
+        <h1 class="text-5xl md:text-7xl mb-6 glow-text floating-card">
+          Skied
+        </h1>
+        <p class="text-2xl text-gray-400 mb-8">
+          16 y/o Developer &amp; Creative Technologist
+        </p>
+        <p class="mb-12 text-gray-300">
+          Explore my portfolio and discover what I can build.
+        </p>
+        <div class="flex justify-center space-x-6">
+          <a
+            href="https://github.com/Skiedlmao"
+            target="_blank"
+            class="px-6 py-3 bg-indigo-600 rounded-full hover:bg-indigo-700 transition transform hover:scale-105"
+          >
+            <i class="fab fa-github mr-2"></i> GitHub
+          </a>
+          <a
+            href="https://namemc.com/profile/Skied"
+            target="_blank"
+            class="px-6 py-3 bg-cyan-600 rounded-full hover:bg-cyan-700 transition transform hover:scale-105"
+          >
+            NameMC Profile
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section id="tech-stack" class="py-24">
+      <h2 class="text-4xl font-bold mb-16 text-center glow-text">Tech Stack</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Java Card -->
+        <div class="tech-card glass p-8 rounded-xl">
+          <i class="fab fa-java text-5xl text-indigo-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">Java</h3>
+          <div class="h-1 w-24 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full mb-4"></div>
+          <p class="text-gray-400">Advanced OOP &amp; Minecraft /Development</p>
+        </div>
+        <!-- JavaScript Card -->
+        <div class="tech-card glass p-8 rounded-xl">
+          <i class="fab fa-js text-5xl text-yellow-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">JavaScript</h3>
+          <div class="h-1 w-24 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full mb-4"></div>
+          <p class="text-gray-400">Modern ES6+ &amp; Frontend Development</p>
+        </div>
+        <!-- PowerShell (PS1) Card -->
+        <div class="tech-card glass p-8 rounded-xl">
+          <i class="fas fa-terminal text-5xl text-blue-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">PowerShell</h3>
+          <div class="h-1 w-24 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full mb-4"></div>
+          <p class="text-gray-400">Scripting &amp; Automation</p>
+        </div>
+        <!-- C++ Card -->
+        <div class="tech-card glass p-8 rounded-xl">
+          <i class="fas fa-code text-5xl text-purple-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">C++</h3>
+          <div class="h-1 w-24 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full mb-4"></div>
+          <p class="text-gray-400">System Programming &amp; Game Development</p>
+        </div>
+        <!-- Python Card -->
+        <div class="tech-card glass p-8 rounded-xl">
+          <i class="fab fa-python text-5xl text-green-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">Python</h3>
+          <div class="h-1 w-24 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full mb-4"></div>
+          <p class="text-gray-400">Data Analysis &amp; Automation</p>
+        </div>
+        <!-- HTML Card -->
+        <div class="tech-card glass p-8 rounded-xl">
+          <i class="fab fa-html5 text-5xl text-orange-400 mb-4"></i>
+          <h3 class="text-xl font-bold mb-2">HTML</h3>
+          <div class="h-1 w-24 bg-gradient-to-r from-orange-400 to-red-500 rounded-full mb-4"></div>
+          <p class="text-gray-400">Modern Web Development</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Placeholder Projects Section -->
+    <section id="projects" class="py-24">
+      <h2 class="text-4xl font-bold mb-16 text-center glow-text">Projects</h2>
+      <p class="text-center text-gray-400">Showcasing upcoming projects soon...</p>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-24">
+      <h2 class="text-4xl font-bold mb-16 text-center glow-text">Contact</h2>
+      <p class="text-center text-gray-400 mb-8">Add me on Discord: Sk_ied</p>
+      <!-- Attempt to open Discord (adjust as needed) -->
+      <div class="flex justify-center">
+        <a
+          href="discord://"
+          class="px-8 py-3 bg-indigo-600 rounded-full hover:bg-indigo-700 transition transform hover:scale-105"
+          title="Add Sk_ied on Discord"
+        >
+          Contact Me
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Three.js Starfield Script (no rotating cube) -->
+  <script>
+    let scene, camera, renderer, particles;
+    const mouse = { x: 0, y: 0 };
+
+    function initScene() {
+      // Create scene, camera, renderer
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(
+        75, window.innerWidth / window.innerHeight, 0.1, 3000
+      );
+      camera.position.z = 600;
+
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+      // Particle geometry
+      const geometry = new THREE.BufferGeometry();
+      const vertices = [];
+      const colors = [];
+
+      for (let i = 0; i < 5000; i++) {
+        vertices.push(
+          (Math.random() - 0.5) * 2000,
+          (Math.random() - 0.5) * 2000,
+          (Math.random() - 0.5) * 2000
+        );
+        const color = new THREE.Color();
+        color.setHSL(Math.random(), 0.5, 0.5);
+        colors.push(color.r, color.g, color.b);
+      }
+
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+      const material = new THREE.PointsMaterial({
+        size: 3,
+        vertexColors: true
+      });
+
+      particles = new THREE.Points(geometry, material);
+      scene.add(particles);
+
+      // Listeners
+      window.addEventListener('resize', onWindowResize, false);
+      document.addEventListener('mousemove', onMouseMove, false);
+
+      animate();
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onMouseMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Slowly rotate starfield
+      particles.rotation.y += 0.0005;
+
+      // Move camera slightly with mouse
+      camera.position.x += (mouse.x * 50 - camera.position.x) * 0.02;
+      camera.position.y += (-mouse.y * 50 - camera.position.y) * 0.02;
+      camera.lookAt(scene.position);
+
+      renderer.render(scene, camera);
+    }
+
+    // Initialize starfield once page loads
+    window.addEventListener('DOMContentLoaded', initScene);
+  </script>
+
+  <!-- Optional Custom Cursor Script -->
+  <script>
+    const cursor = document.getElementById('cursor');
+    const cursorGlow = document.querySelector('.cursor-glow');
+
+    document.addEventListener('mousemove', e => {
+      cursor.style.left = e.pageX + 'px';
+      cursor.style.top = e.pageY + 'px';
+      cursorGlow.style.left = e.pageX + 'px';
+      cursorGlow.style.top = e.pageY + 'px';
+    });
+  </script>
+</body>
+</html>
